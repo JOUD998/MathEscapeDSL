@@ -1,0 +1,9 @@
+
+
+
+Generation without Visitor
+java -jar lib/antlr-4.13.1-complete.jar -Dlanguage=Java -package com.company.grammar.generated src/com/company/grammar/generated/MathEscape.g4
+
+Generation with Visitor
+java -jar lib/antlr-4.13.1-complete.jar -Dlanguage=Java -package com.company.grammar.generated -visitor src/com/company/grammar/generated/MathEscape.g4
+

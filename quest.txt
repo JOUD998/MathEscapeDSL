@@ -1,0 +1,11 @@
+Quest "Schlüssel sammeln" {
+    Step "Hole Schlüssel 1" {
+        NPC: "Alfredst"
+        Action: "Rede mit NPC und bekomme Schlüssel"
+    }
+
+    Step "Öffne Tür" {
+        Condition: "Hat alle Schlüssel"
+        Action: "Tür öffnen und Quest abschließen"
+    }
+}
