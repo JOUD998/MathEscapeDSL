@@ -13,9 +13,9 @@ public class BinaryOpNode extends Node{
 
     @Override
     public String toJson() {
-        return "{ \"type\": \"BinaryOp\", " +
-                "\"op\": \"" + op + "\", " +
-                "\"left\": " + left.toJson() + ", " +
-                "\"right\": " + right.toJson() + " }";
+        return "{\n \"type\": \"BinaryOp\",\n " +
+                "\"op\": \"" + op + "\",\n " +
+                "\"left\": " + left.toJson() + ",\n " +
+                "\"right\": " + right.toJson() + " \n}";
     }
 }

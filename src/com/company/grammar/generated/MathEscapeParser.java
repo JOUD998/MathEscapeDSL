@@ -17,7 +17,7 @@ public class MathEscapeParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		ID=1, INT=2, PLUS=3, MINUS=4, EQUAL=5, WS=6;
+		ID=1, INT=2, PLUS=3, MINUS=4, MULTI=5, DIV=6, EQUAL=7, WS=8;
 	public static final int
 		RULE_mathEscape = 0, RULE_expr = 1, RULE_term = 2;
 	private static String[] makeRuleNames() {
@@ -29,13 +29,13 @@ public class MathEscapeParser extends Parser {
 
 	private static String[] makeLiteralNames() {
 		return new String[] {
-			null, null, null, "'+'", "'-'", "'='"
+			null, null, null, "'+'", "'-'", "'*'", "'/'", "'='"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, "ID", "INT", "PLUS", "MINUS", "EQUAL", "WS"
+			null, "ID", "INT", "PLUS", "MINUS", "MULTI", "DIV", "EQUAL", "WS"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -152,6 +152,8 @@ public class MathEscapeParser extends Parser {
 		}
 		public TerminalNode PLUS() { return getToken(MathEscapeParser.PLUS, 0); }
 		public TerminalNode MINUS() { return getToken(MathEscapeParser.MINUS, 0); }
+		public TerminalNode MULTI() { return getToken(MathEscapeParser.MULTI, 0); }
+		public TerminalNode DIV() { return getToken(MathEscapeParser.DIV, 0); }
 		public ExprContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -191,7 +193,7 @@ public class MathEscapeParser extends Parser {
 			term();
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(21);
+			setState(27);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,1,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
@@ -199,7 +201,7 @@ public class MathEscapeParser extends Parser {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
 					_prevctx = _localctx;
 					{
-					setState(19);
+					setState(25);
 					_errHandler.sync(this);
 					switch ( getInterpreter().adaptivePredict(_input,0,_ctx) ) {
 					case 1:
@@ -207,7 +209,7 @@ public class MathEscapeParser extends Parser {
 						_localctx = new ExprContext(_parentctx, _parentState);
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
 						setState(13);
-						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
+						if (!(precpred(_ctx, 5))) throw new FailedPredicateException(this, "precpred(_ctx, 5)");
 						setState(14);
 						match(PLUS);
 						setState(15);
@@ -219,17 +221,41 @@ public class MathEscapeParser extends Parser {
 						_localctx = new ExprContext(_parentctx, _parentState);
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
 						setState(16);
-						if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
+						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
 						setState(17);
 						match(MINUS);
 						setState(18);
 						term();
 						}
 						break;
+					case 3:
+						{
+						_localctx = new ExprContext(_parentctx, _parentState);
+						pushNewRecursionContext(_localctx, _startState, RULE_expr);
+						setState(19);
+						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
+						setState(20);
+						match(MULTI);
+						setState(21);
+						term();
+						}
+						break;
+					case 4:
+						{
+						_localctx = new ExprContext(_parentctx, _parentState);
+						pushNewRecursionContext(_localctx, _startState, RULE_expr);
+						setState(22);
+						if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
+						setState(23);
+						match(DIV);
+						setState(24);
+						term();
+						}
+						break;
 					}
 					} 
 				}
-				setState(23);
+				setState(29);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,1,_ctx);
 			}
@@ -276,7 +302,7 @@ public class MathEscapeParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(24);
+			setState(30);
 			_la = _input.LA(1);
 			if ( !(_la==ID || _la==INT) ) {
 			_errHandler.recoverInline(this);
@@ -309,33 +335,41 @@ public class MathEscapeParser extends Parser {
 	private boolean expr_sempred(ExprContext _localctx, int predIndex) {
 		switch (predIndex) {
 		case 0:
-			return precpred(_ctx, 3);
+			return precpred(_ctx, 5);
 		case 1:
+			return precpred(_ctx, 4);
+		case 2:
+			return precpred(_ctx, 3);
+		case 3:
 			return precpred(_ctx, 2);
 		}
 		return true;
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001\u0006\u001b\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001"+
-		"\u0002\u0002\u0007\u0002\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000"+
+		"\u0004\u0001\b!\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
+		"\u0002\u0007\u0002\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001"+
 		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
-		"\u0001\u0001\u0001\u0001\u0001\u0001\u0005\u0001\u0014\b\u0001\n\u0001"+
-		"\f\u0001\u0017\t\u0001\u0001\u0002\u0001\u0002\u0001\u0002\u0000\u0001"+
-		"\u0002\u0003\u0000\u0002\u0004\u0000\u0001\u0001\u0000\u0001\u0002\u0019"+
-		"\u0000\u0006\u0001\u0000\u0000\u0000\u0002\n\u0001\u0000\u0000\u0000\u0004"+
-		"\u0018\u0001\u0000\u0000\u0000\u0006\u0007\u0003\u0002\u0001\u0000\u0007"+
-		"\b\u0005\u0005\u0000\u0000\b\t\u0003\u0002\u0001\u0000\t\u0001\u0001\u0000"+
-		"\u0000\u0000\n\u000b\u0006\u0001\uffff\uffff\u0000\u000b\f\u0003\u0004"+
-		"\u0002\u0000\f\u0015\u0001\u0000\u0000\u0000\r\u000e\n\u0003\u0000\u0000"+
-		"\u000e\u000f\u0005\u0003\u0000\u0000\u000f\u0014\u0003\u0004\u0002\u0000"+
-		"\u0010\u0011\n\u0002\u0000\u0000\u0011\u0012\u0005\u0004\u0000\u0000\u0012"+
-		"\u0014\u0003\u0004\u0002\u0000\u0013\r\u0001\u0000\u0000\u0000\u0013\u0010"+
-		"\u0001\u0000\u0000\u0000\u0014\u0017\u0001\u0000\u0000\u0000\u0015\u0013"+
-		"\u0001\u0000\u0000\u0000\u0015\u0016\u0001\u0000\u0000\u0000\u0016\u0003"+
-		"\u0001\u0000\u0000\u0000\u0017\u0015\u0001\u0000\u0000\u0000\u0018\u0019"+
-		"\u0007\u0000\u0000\u0000\u0019\u0005\u0001\u0000\u0000\u0000\u0002\u0013"+
-		"\u0015";
+		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
+		"\u0001\u0001\u0001\u0001\u0001\u0005\u0001\u001a\b\u0001\n\u0001\f\u0001"+
+		"\u001d\t\u0001\u0001\u0002\u0001\u0002\u0001\u0002\u0000\u0001\u0002\u0003"+
+		"\u0000\u0002\u0004\u0000\u0001\u0001\u0000\u0001\u0002!\u0000\u0006\u0001"+
+		"\u0000\u0000\u0000\u0002\n\u0001\u0000\u0000\u0000\u0004\u001e\u0001\u0000"+
+		"\u0000\u0000\u0006\u0007\u0003\u0002\u0001\u0000\u0007\b\u0005\u0007\u0000"+
+		"\u0000\b\t\u0003\u0002\u0001\u0000\t\u0001\u0001\u0000\u0000\u0000\n\u000b"+
+		"\u0006\u0001\uffff\uffff\u0000\u000b\f\u0003\u0004\u0002\u0000\f\u001b"+
+		"\u0001\u0000\u0000\u0000\r\u000e\n\u0005\u0000\u0000\u000e\u000f\u0005"+
+		"\u0003\u0000\u0000\u000f\u001a\u0003\u0004\u0002\u0000\u0010\u0011\n\u0004"+
+		"\u0000\u0000\u0011\u0012\u0005\u0004\u0000\u0000\u0012\u001a\u0003\u0004"+
+		"\u0002\u0000\u0013\u0014\n\u0003\u0000\u0000\u0014\u0015\u0005\u0005\u0000"+
+		"\u0000\u0015\u001a\u0003\u0004\u0002\u0000\u0016\u0017\n\u0002\u0000\u0000"+
+		"\u0017\u0018\u0005\u0006\u0000\u0000\u0018\u001a\u0003\u0004\u0002\u0000"+
+		"\u0019\r\u0001\u0000\u0000\u0000\u0019\u0010\u0001\u0000\u0000\u0000\u0019"+
+		"\u0013\u0001\u0000\u0000\u0000\u0019\u0016\u0001\u0000\u0000\u0000\u001a"+
+		"\u001d\u0001\u0000\u0000\u0000\u001b\u0019\u0001\u0000\u0000\u0000\u001b"+
+		"\u001c\u0001\u0000\u0000\u0000\u001c\u0003\u0001\u0000\u0000\u0000\u001d"+
+		"\u001b\u0001\u0000\u0000\u0000\u001e\u001f\u0007\u0000\u0000\u0000\u001f"+
+		"\u0005\u0001\u0000\u0000\u0000\u0002\u0019\u001b";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

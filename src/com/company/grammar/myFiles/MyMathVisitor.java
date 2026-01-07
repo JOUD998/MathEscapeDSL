@@ -23,7 +23,23 @@ public class MyMathVisitor extends MathEscapeBaseVisitor<Node> {
         }
         Node left = visit(ctx.expr());
         Node right = visit(ctx.term());
-        String op = ctx.PLUS() != null ? "+" : "-";
+        String op;
+        if (ctx.PLUS() != null){
+             op = "+";
+        }
+        else if (ctx.MINUS() != null){
+             op = "-";
+        }
+        else if (ctx.MULTI() != null){
+             op = "*";
+        }
+        else if (ctx.DIV() != null){
+             op = "/";
+        }
+        else {
+            throw new RuntimeException("This operation is not allowed");
+        }
+
         return new BinaryOpNode(left,op,right);
     }
 
