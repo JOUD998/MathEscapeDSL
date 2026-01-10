@@ -4,6 +4,16 @@ public class Interpreter {
 
     private Context ctx;
 
+    int factorial(int n) {
+        int result = 1;
+        for (int i = 2; i <= n; i++) {
+            result *= i;
+        }
+        return result;
+    }
+
+
+
     public Interpreter(Context ctx) {
         this.ctx = ctx;
     }
@@ -19,10 +29,16 @@ public class Interpreter {
             }
             return ctx.get(name);
         }
+
+        else if (node instanceof FactorialNode) {
+            int value = evaluation(((FactorialNode) node).child);
+            return factorial(value);
+        }
+
+
         else if (node instanceof BinaryOpNode) {
             BinaryOpNode bin = (BinaryOpNode) node;
 
-            // التعامل مع assignment أولاً
             if (bin.op.equals("=")) {
                 if (!(bin.left instanceof IdNode)) {
                     throw new RuntimeException("Assignment error: left side must be a variable");
@@ -32,7 +48,6 @@ public class Interpreter {
                 return value;
             }
 
-            // العمليات الحسابية الأخرى
             int left = evaluation(bin.left);
             int right = evaluation(bin.right);
             switch (bin.op) {
