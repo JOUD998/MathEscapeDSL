@@ -1,0 +1,9 @@
+
+//visit logic
+//visit(ctx) :
+//        switch(ctx.type) {
+//        case Expr: visitExpr(ctx);
+//        case Term: visitTerm(ctx);
+//   ...
+//           }
+//
