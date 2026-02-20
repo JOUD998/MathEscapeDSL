@@ -1,6 +1,7 @@
 package com.company.core.model;
 
-public abstract class Node {
+public abstract class ASTNode {
+
     public abstract String toJson();
 
 }

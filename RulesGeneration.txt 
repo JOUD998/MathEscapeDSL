@@ -7,3 +7,6 @@ java -jar lib/antlr-4.13.1-complete.jar -Dlanguage=Java -package com.company.gen
 Generation with Visitor
 java -jar lib/antlr-4.13.1-complete.jar -Dlanguage=Java -package com.company.generated_Grammars -visitor src/com/company/generated_Grammars/MathEscape.g4
 
+(Generation with Visitor new Grammar)
+java -jar lib/antlr-4.13.1-complete.jar -Dlanguage=Java -package com.company.grammar -visitor src/com/company/grammar/MathDSL.g4
+

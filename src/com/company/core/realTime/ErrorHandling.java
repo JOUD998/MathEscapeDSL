@@ -17,7 +17,6 @@ public class ErrorHandling {
             return "Factorial (!) must be applied to an integer only.";
         }
 
-        // fallback generic message
         return "There is a syntax error: " + rawMsg;
     }
 

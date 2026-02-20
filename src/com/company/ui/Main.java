@@ -37,7 +37,6 @@ public class Main extends Application {
         stage.setScene(scene);
         stage.show();
 
-        // Listener لكل تغيير في الـ input (real-time)
         inputArea.textProperty().addListener((obs, oldText, newText) -> {
             if (newText.isBlank()) {
                 outputArea.setText("Output will appear here...");

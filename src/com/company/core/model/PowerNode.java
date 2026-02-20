@@ -1,10 +1,10 @@
 package com.company.core.model;
 
-public class PowerNode extends Node {
-    public Node base;
-    public Node exponent;
+public class PowerNode extends ASTNode {
+    public ASTNode base;
+    public ASTNode exponent;
 
-    public PowerNode(Node base, Node exponent) {
+    public PowerNode(ASTNode base, ASTNode exponent) {
         this.base = base;
         this.exponent = exponent;
     }

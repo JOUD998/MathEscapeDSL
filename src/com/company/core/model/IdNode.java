@@ -1,8 +1,8 @@
 package com.company.core.model;
 
-public class IdNode extends Node {
+public class IdNode extends ASTNode {
     public String name;
-    IdNode(String name){this.name = name;}
+    public IdNode(String name){this.name = name;}
 
     @Override
     public String toJson() {

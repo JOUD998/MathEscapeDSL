@@ -4,7 +4,7 @@ import com.company.core.model.*;
 
 public class Interpreter {
 
-    private Context ctx;
+    private  Context ctx;
 
     int factorial(int n) {
         int result = 1;
@@ -20,20 +20,20 @@ public class Interpreter {
         this.ctx = ctx;
     }
 
-    public int evaluation(Node node) {
-        if (node instanceof IntNode) {
-            return ((IntNode) node).value;
+    public int evaluation(ASTNode astNode) {
+        if (astNode instanceof IntNode) {
+            return ((IntNode) astNode).value;
         }
-        else if (node instanceof IdNode) {
-            String name = ((IdNode) node).name;
+        else if (astNode instanceof IdNode) {
+            String name = ((IdNode) astNode).name;
             if (!ctx.contains(name)) {
                 throw new RuntimeException("Variable not defined: " + name);
             }
             return ctx.get(name);
         }
 
-        else if (node instanceof FactorialNode) {
-            Node base = ((FactorialNode) node).child;
+        else if (astNode instanceof FactorialNode) {
+            ASTNode base = ((FactorialNode) astNode).child;
             int value;
 
             if (base instanceof IntNode) {
@@ -51,14 +51,14 @@ public class Interpreter {
             return factorial(value);
         }
 
-        else if (node instanceof PowerNode) {
-            int base = evaluation(((PowerNode) node).base);
-            int exponent = evaluation(((PowerNode) node).exponent);
-            return (int)Math.pow(base, exponent);  // استخدم Math.pow
+        else if (astNode instanceof PowerNode) {
+            int base = evaluation(((PowerNode) astNode).base);
+            int exponent = evaluation(((PowerNode) astNode).exponent);
+            return (int)Math.pow(base, exponent);
         }
 
-        else if (node instanceof BinaryOpNode) {
-            BinaryOpNode bin = (BinaryOpNode) node;
+        else if (astNode instanceof BinaryOpNode) {
+            BinaryOpNode bin = (BinaryOpNode) astNode;
 
             if (bin.op.equals("=")) {
                 if (!(bin.left instanceof IdNode)) {
@@ -81,6 +81,6 @@ public class Interpreter {
             }
         }
 
-        throw new RuntimeException("Unknown node type");
+        throw new RuntimeException("Unknown astNode type");
     }
 }

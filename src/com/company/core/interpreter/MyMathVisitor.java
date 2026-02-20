@@ -4,33 +4,34 @@ import com.company.core.model.*;
 import com.company.generated_Grammars.MathEscapeBaseVisitor;
 import com.company.generated_Grammars.MathEscapeParser;
 
-public class MyMathVisitor extends MathEscapeBaseVisitor<Node> {
+public class MyMathVisitor extends MathEscapeBaseVisitor<ASTNode> {
 
     @Override
-    public Node visitMathEscape(MathEscapeParser.MathEscapeContext ctx) {
+    public ASTNode visitMathEscape(MathEscapeParser.MathEscapeContext ctx) {
+//        System.out.println(ctx.toString());
         return visit(ctx.statement());
     }
 
 
 
     @Override
-    public Node visitStatement(MathEscapeParser.StatementContext ctx) {
+    public ASTNode visitStatement(MathEscapeParser.StatementContext ctx) {
 
-        Node left = new IdNode(ctx.ID().getText());
-        Node right = visit(ctx.expr());
+        ASTNode left = new IdNode(ctx.ID().getText());
+        ASTNode right = visit(ctx.expr());
         return new BinaryOpNode(left,"=",right);
 
     }
 
     @Override
-    public Node visitExpr(MathEscapeParser.ExprContext ctx) {
+    public ASTNode visitExpr(MathEscapeParser.ExprContext ctx) {
 
         if (ctx.expr() == null) {
             return visit(ctx.term());
         }
 
-        Node left = visit(ctx.expr());
-        Node right = visit(ctx.term());
+        ASTNode left = visit(ctx.expr());
+        ASTNode right = visit(ctx.term());
 
         String op;
         if (ctx.PLUS() != null) {
@@ -44,14 +45,14 @@ public class MyMathVisitor extends MathEscapeBaseVisitor<Node> {
         return new BinaryOpNode(left, op, right);
     }
     @Override
-    public Node visitTerm(MathEscapeParser.TermContext ctx) {
+    public ASTNode visitTerm(MathEscapeParser.TermContext ctx) {
 
         if (ctx.term() == null) {
             return visit(ctx.factor());
         }
 
-        Node left = visit(ctx.term());
-        Node right = visit(ctx.factor());
+        ASTNode left = visit(ctx.term());
+        ASTNode right = visit(ctx.factor());
 
         String op;
         if (ctx.MULTI() != null) {
@@ -66,23 +67,22 @@ public class MyMathVisitor extends MathEscapeBaseVisitor<Node> {
     }
 
     @Override
-    public Node visitFactor(MathEscapeParser.FactorContext ctx) {
-        Node base = visit(ctx.postfix());
+    public ASTNode visitFactor(MathEscapeParser.FactorContext ctx) {
+        ASTNode base = visit(ctx.postfix());
 
         // إذا فيه power: postfix ^ factor
         if (ctx.factor() != null) {
-            Node exponent = visit(ctx.factor());
+            ASTNode exponent = visit(ctx.factor());
             base = new PowerNode(base, exponent);
         }
 
         return base;
     }
     @Override
-    public Node visitPostfix(MathEscapeParser.PostfixContext ctx) {
+    public ASTNode visitPostfix(MathEscapeParser.PostfixContext ctx) {
 
-        Node base = visit(ctx.primary());
+        ASTNode base = visit(ctx.primary());
 
-//        إذا فيه FACT، لفّ Node بـ FactorialNode
 
         if (ctx.FACT() != null) {
             base = new FactorialNode(base);
@@ -95,22 +95,16 @@ public class MyMathVisitor extends MathEscapeBaseVisitor<Node> {
     }
 
     @Override
-    public Node visitPrimary(MathEscapeParser.PrimaryContext ctx) {
+    public ASTNode visitPrimary(MathEscapeParser.PrimaryContext ctx) {
         if (ctx.INT() != null)
         {
             return new IntNode(Integer.parseInt(ctx.INT().getText()));
         } else if (ctx.ID() != null) {
             return new IdNode(ctx.ID().getText());
         } else   {
-             return visit(ctx.expr());
+            return visit(ctx.expr());
         }
 
     }
 
-
-
-
-
-
 }
-

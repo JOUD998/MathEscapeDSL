@@ -25,12 +25,12 @@ term
     ;
 
 factor
-    : postfix POWER factor   // right-associative
+    : postfix POWER factor
     | postfix
     ;
 
 postfix
-    : primary FACT?          // factorial أعلى شيء
+    : primary FACT?
     ;
 
 primary

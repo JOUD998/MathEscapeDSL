@@ -1,6 +1,6 @@
 package com.company.core.model;
 
-public class IntNode extends Node {
+public class IntNode extends ASTNode {
     public int value;
 
     public IntNode(int value){this.value = value;}

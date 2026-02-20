@@ -1,9 +1,9 @@
 package com.company.core.model;
 
-public class FactorialNode extends Node {
+public class FactorialNode extends ASTNode {
 
-    public Node child;
-    FactorialNode(Node child) {this.child = child;}
+    public ASTNode child;
+    public FactorialNode(ASTNode child) {this.child = child;}
 
     @Override
     public String toJson() {

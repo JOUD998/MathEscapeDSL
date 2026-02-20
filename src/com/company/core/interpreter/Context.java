@@ -20,6 +20,7 @@ public class Context {
 
          return vars.get(name);
     }
+
     public boolean contains(String name) {
         return vars.containsKey(name);
     }
