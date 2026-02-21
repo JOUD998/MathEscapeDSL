@@ -1,11 +1,13 @@
 package com.company.core.ast;
 
-import com.company.core.model.ASTNode;
-import com.company.core.model.NumberLiteralNode;
+import com.company.core.model.*;
 import com.company.core.model.unit.BaseUnitNode;
 import com.company.core.model.unit.UnitNode;
 import com.company.grammar.MathDSLBaseVisitor;
 import com.company.grammar.MathDSLParser;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ASTBuilder extends MathDSLBaseVisitor<ASTNode> {
 
@@ -51,7 +53,7 @@ public class ASTBuilder extends MathDSLBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitUnit(MathDSLParser.UnitContext ctx) {
-        if (ctx.baseUnit().size() == 1){
+        if (ctx.baseUnit().size() == 1) {
             BaseUnitNode left = (BaseUnitNode) visit(ctx.baseUnit(0));
             return new UnitNode(left);
         }
@@ -67,37 +69,80 @@ public class ASTBuilder extends MathDSLBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitExpr(MathDSLParser.ExprContext ctx) {
-        return super.visitExpr(ctx);
+        if (ctx.PLUS() != null || ctx.MINUS() != null) {
+            ASTNode leftSide = visit(ctx.expr());
+            ASTNode rightSide = visit(ctx.term());
+            char op = ctx.PLUS() != null ? '+' : '-';
+            return new BinaryOpNode(leftSide, op, rightSide);
+        } else {
+            return visit(ctx.term());
+        }
     }
 
     @Override
     public ASTNode visitTerm(MathDSLParser.TermContext ctx) {
-        return super.visitTerm(ctx);
+        if (ctx.MULTI() != null || ctx.DIV() != null) {
+            ASTNode leftSide = visit(ctx.term());
+            ASTNode rightSide = visit(ctx.factor());
+            char op = ctx.MULTI() != null ? '*' : '/';
+            return new BinaryOpNode(leftSide, op, rightSide);
+        } else {
+            return visit(ctx.factor());
+        }
+
     }
 
     @Override
     public ASTNode visitFactor(MathDSLParser.FactorContext ctx) {
-        return super.visitFactor(ctx);
+        if (ctx.POWER() != null) {
+            ASTNode base = visit(ctx.primary());
+            ASTNode exponent = visit(ctx.factor());
+            return new PowerNode(base, exponent);
+        } else {
+            return visit(ctx.primary());
+        }
     }
 
-    @Override
-    public ASTNode visitPostfix(MathDSLParser.PostfixContext ctx) {
-        return super.visitPostfix(ctx);
-    }
 
     @Override
     public ASTNode visitPrimary(MathDSLParser.PrimaryContext ctx) {
+
         if (ctx.NUMBER() != null) {
             double value = Double.parseDouble(ctx.NUMBER().getText());
             UnitNode unit = null;
-
             if (ctx.unit() != null) {
                 unit = (UnitNode) visit(ctx.unit());
             }
-
             return new NumberLiteralNode(value, unit);
+        }
+        // متغير أو استدعاء تابع
+        else if (ctx.ID() != null) {
+            // استدعاء تابع
+            if (ctx.LPAREN() != null && ctx.RPAREN() != null) {
+                List<ParamNode> params = new ArrayList<>();
+                if (ctx.argList() != null) {
+                    for (MathDSLParser.ExprContext exprCtx : ctx.argList().expr()) {
+                        // كل expr يتحول لنوع ASTNode أو NumberLiteralNode حسب ما تعلمنا
+                        ASTNode argNode = visit(exprCtx);
+                        if (argNode instanceof NumberLiteralNode) {
+                            NumberLiteralNode numNode = (NumberLiteralNode) argNode;
+                            params.add(new ParamNode("arg", numNode.unitNode)); // اسم افتراضي "arg"، ممكن تطوره لاحقاً
+                        } else if (argNode instanceof IdNode) {
+                            params.add(new ParamNode(((IdNode) argNode).name, null));
+                        } else {
+                            params.add(new ParamNode("expr", null));
+                        }
+                    }
+                }
+                return new FunDeclNode(new IdNode(ctx.ID().getText()), params);
+            }
+            // متغير عادي
+            else {
+                return new IdNode(ctx.ID().getText());
+            }
         }
 
         return super.visitPrimary(ctx);
     }
 }
+
