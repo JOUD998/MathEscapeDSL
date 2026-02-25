@@ -1,11 +1,13 @@
 package com.company.core.ast;
-
 import com.company.core.model.*;
+import com.company.core.model.function.FunDeclNode;
+import com.company.core.model.function.FuncCallNode;
+import com.company.core.model.function.ParamListNode;
+import com.company.core.model.function.ParamNode;
 import com.company.core.model.unit.BaseUnitNode;
 import com.company.core.model.unit.UnitNode;
 import com.company.grammar.MathDSLBaseVisitor;
 import com.company.grammar.MathDSLParser;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,42 +15,93 @@ public class ASTBuilder extends MathDSLBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitProg(MathDSLParser.ProgContext ctx) {
-        return super.visitProg(ctx);
+        List<ASTNode> statements = new ArrayList<>();
+        for (MathDSLParser.StatementContext statement: ctx.statement()){
+            statements.add(visit(statement));
+        }
+        return new ProgramNode(statements);
     }
 
     @Override
     public ASTNode visitStatement(MathDSLParser.StatementContext ctx) {
-        return super.visitStatement(ctx);
+        if (ctx.funDecl() != null) {
+            return visit(ctx.funDecl());
+        } else if (ctx.letDecl() != null) {
+            return visit(ctx.letDecl());
+        } else {
+            return visit(ctx.exprStmt());
+        }
     }
+
 
     @Override
     public ASTNode visitFunDecl(MathDSLParser.FunDeclContext ctx) {
-        return super.visitFunDecl(ctx);
+
+        IdNode id = new IdNode(ctx.fname.getText());
+
+        List<ParamNode> params;
+        if (ctx.paramList() != null) {
+            ParamListNode listNode = (ParamListNode) visit(ctx.paramList());
+            params = listNode.paramNodeList;
+
+        } else {
+            params = new ArrayList<>();
+        }
+
+        UnitNode returnType = null;
+        if (ctx.unit() != null) {
+            returnType = (UnitNode) visit(ctx.unit());
+        }
+
+        ASTNode body = visit(ctx.expr());
+
+        return new FunDeclNode(id, params, returnType, body);
     }
 
     @Override
     public ASTNode visitLetDecl(MathDSLParser.LetDeclContext ctx) {
-        return super.visitLetDecl(ctx);
+//            : LET vname=ID (COLON unit)? EQUAL expr
+        UnitNode unit = null;
+        if (ctx.unit() != null){
+            unit = (UnitNode) visit(ctx.unit());
+        }
+
+        return new VariableNode(new IdNode(ctx.ID().getText()),unit,visit(ctx.expr()));
     }
 
     @Override
     public ASTNode visitExprStmt(MathDSLParser.ExprStmtContext ctx) {
-        return super.visitExprStmt(ctx);
+        ASTNode exprNode = visit(ctx.expr());
+        return new ExprStmtNode(exprNode);
     }
 
     @Override
     public ASTNode visitParamList(MathDSLParser.ParamListContext ctx) {
-        return super.visitParamList(ctx);
+        List<ParamNode> paramNodeList = new ArrayList<>();
+        for (MathDSLParser.ParamContext pCtx : ctx.param()) {
+            paramNodeList.add((ParamNode) visit(pCtx));
+        }
+        return new ParamListNode(paramNodeList);
     }
 
     @Override
     public ASTNode visitParam(MathDSLParser.ParamContext ctx) {
-        return super.visitParam(ctx);
+        UnitNode unit = null;
+        if (ctx.unit() != null) {
+            unit = (UnitNode) visit(ctx.unit());
+        }
+        return new ParamNode(ctx.pname.getText(), unit);
+
     }
 
+    //to delete
     @Override
     public ASTNode visitArgList(MathDSLParser.ArgListContext ctx) {
-        return super.visitArgList(ctx);
+//        List<ASTNode> expressions = new ArrayList<>();
+//        for (MathDSLParser.ExprContext exps: ctx.expr()){
+//            expressions.add(visit(exps));
+//        }
+         return super.visitArgList(ctx);
     }
 
     @Override
@@ -114,35 +167,26 @@ public class ASTBuilder extends MathDSLBaseVisitor<ASTNode> {
                 unit = (UnitNode) visit(ctx.unit());
             }
             return new NumberLiteralNode(value, unit);
-        }
-        // متغير أو استدعاء تابع
-        else if (ctx.ID() != null) {
-            // استدعاء تابع
+        } else if (ctx.ID() != null) {
             if (ctx.LPAREN() != null && ctx.RPAREN() != null) {
-                List<ParamNode> params = new ArrayList<>();
+                List<ASTNode> args = new ArrayList<>();
                 if (ctx.argList() != null) {
                     for (MathDSLParser.ExprContext exprCtx : ctx.argList().expr()) {
-                        // كل expr يتحول لنوع ASTNode أو NumberLiteralNode حسب ما تعلمنا
-                        ASTNode argNode = visit(exprCtx);
-                        if (argNode instanceof NumberLiteralNode) {
-                            NumberLiteralNode numNode = (NumberLiteralNode) argNode;
-                            params.add(new ParamNode("arg", numNode.unitNode)); // اسم افتراضي "arg"، ممكن تطوره لاحقاً
-                        } else if (argNode instanceof IdNode) {
-                            params.add(new ParamNode(((IdNode) argNode).name, null));
-                        } else {
-                            params.add(new ParamNode("expr", null));
-                        }
+                        args.add(visit(exprCtx));
                     }
                 }
-                return new FunDeclNode(new IdNode(ctx.ID().getText()), params);
-            }
-            // متغير عادي
-            else {
+                return new FuncCallNode(
+                        new IdNode(ctx.ID().getText()),
+                        args
+                );
+            } else {
                 return new IdNode(ctx.ID().getText());
             }
         }
 
         return super.visitPrimary(ctx);
     }
+
+
 }
 

@@ -60,7 +60,7 @@ public class Interpreter {
         else if (astNode instanceof BinaryOpNode) {
             BinaryOpNode bin = (BinaryOpNode) astNode;
 
-            if (bin.op.equals("=")) {
+            if (bin.op == '=') {
                 if (!(bin.left instanceof IdNode)) {
                     throw new RuntimeException("Assignment error: left side must be a variable");
                 }
@@ -72,10 +72,10 @@ public class Interpreter {
             int left = evaluation(bin.left);
             int right = evaluation(bin.right);
             switch (bin.op) {
-                case "+": return left + right;
-                case "-": return left - right;
-                case "*": return left * right;
-                case "/": return left / right;
+                case '+': return left + right;
+                case '-': return left - right;
+                case '*': return left * right;
+                case '/': return left / right;
                 default:
                     throw new RuntimeException("Unknown operator: " + bin.op);
             }

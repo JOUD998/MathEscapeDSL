@@ -2,10 +2,10 @@ package com.company.core.model;
 
 public class BinaryOpNode extends ASTNode {
     public ASTNode left;
-    public String op;
+    public char op;
     public ASTNode right;
 
-    public BinaryOpNode(ASTNode left, String op, ASTNode right){
+    public BinaryOpNode(ASTNode left, char op, ASTNode right){
         this.left = left;
         this.op = op;
         this.right = right;

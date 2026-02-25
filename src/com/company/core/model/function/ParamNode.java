@@ -1,8 +1,9 @@
-package com.company.core.model;
+package com.company.core.model.function;
 
+import com.company.core.model.ASTNode;
 import com.company.core.model.unit.UnitNode;
 
-public class ParamNode extends ASTNode{
+public class ParamNode extends ASTNode {
 
     public String name;
     public UnitNode unit;

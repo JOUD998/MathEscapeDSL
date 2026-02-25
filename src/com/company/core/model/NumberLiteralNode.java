@@ -4,8 +4,8 @@ import com.company.core.model.unit.UnitNode;
 
 public class NumberLiteralNode extends ASTNode {
 
-    double value;
-    UnitNode unitNode;
+    public double value;
+    public UnitNode unitNode;
     public NumberLiteralNode(double value, UnitNode unitNode){
         this.value = value;
         this.unitNode = unitNode;

@@ -37,7 +37,7 @@ param
     ;
 
 argList
-    : expr (COMMA expr)*
+    : expr (COMMA expr)* /// x,x,x // 1,1,1
     ;
 
 // --- Units ---
@@ -66,12 +66,8 @@ term
     ;
 
 factor
-    : postfix POWER factor      // right-assoc power
-    | postfix
-    ;
-
-postfix
-    : primary FACT?             // optional factorial
+    : primary POWER factor
+    | primary
     ;
 
 primary

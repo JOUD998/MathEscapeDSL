@@ -19,7 +19,7 @@ public class MyMathVisitor extends MathEscapeBaseVisitor<ASTNode> {
 
         ASTNode left = new IdNode(ctx.ID().getText());
         ASTNode right = visit(ctx.expr());
-        return new BinaryOpNode(left,"=",right);
+        return new BinaryOpNode(left,'=',right);
 
     }
 
@@ -33,11 +33,11 @@ public class MyMathVisitor extends MathEscapeBaseVisitor<ASTNode> {
         ASTNode left = visit(ctx.expr());
         ASTNode right = visit(ctx.term());
 
-        String op;
+        char op;
         if (ctx.PLUS() != null) {
-            op = "+";
+            op = '+';
         } else if (ctx.MINUS() != null) {
-            op = "-";
+            op = '-';
         } else {
             throw new RuntimeException("This operation is not allowed");
         }
@@ -54,11 +54,11 @@ public class MyMathVisitor extends MathEscapeBaseVisitor<ASTNode> {
         ASTNode left = visit(ctx.term());
         ASTNode right = visit(ctx.factor());
 
-        String op;
+        char op;
         if (ctx.MULTI() != null) {
-            op = "*";
+            op = '*';
         } else if (ctx.DIV() != null) {
-            op = "/";
+            op = '/';
         } else {
             throw new RuntimeException("This operation is not allowed");
         }
