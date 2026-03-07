@@ -36,6 +36,7 @@ public class TestParser {
         SemanticAnalyzer analyzer = new SemanticAnalyzer();
         ast.accept(analyzer); // هنا رح يزور AST كله
         System.out.println("Semantic analysis done!");
+        System.out.println("declared variables: " );
     }
 
 }
