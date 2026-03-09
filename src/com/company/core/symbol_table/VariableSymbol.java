@@ -1,18 +1,17 @@
 package com.company.core.symbol_table;
 
-import com.company.core.model.ASTNode;
-import com.company.core.model.unit.UnitNode;
+import com.company.core.semantic.unit.Dimension;
 
 public class VariableSymbol extends Symbol {
 
-    private final ASTNode value;
+    private Dimension dimension;
 
-    public VariableSymbol(String name, UnitNode unit, ASTNode value) {
-        super(name, unit);
-        this.value = value;
+    public VariableSymbol(String name, Dimension dimension) {
+        super(name);
+        this.dimension = dimension;
     }
 
-    public ASTNode getValue() {
-        return value;
+    public Dimension getDimension() {
+        return dimension;
     }
 }

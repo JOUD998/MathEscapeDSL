@@ -1,38 +1,26 @@
 package com.company.core.symbol_table;
 
-import com.company.core.model.ASTNode;
-import com.company.core.model.function.ParamNode;
-import com.company.core.model.unit.UnitNode;
-
 import java.util.List;
+
+import com.company.core.model.unit.UnitNode;
+import com.company.core.semantic.unit.Dimension;
 
 public class FunctionSymbol extends Symbol {
 
-    private final List<ParamNode> params;
-    private final UnitNode returnType;
-    private final ASTNode body;
+    private List<VariableSymbol> parameters;
+    private Dimension dimension;
 
-    public FunctionSymbol(String name,
-                          UnitNode unit,
-                          List<ParamNode> params,
-                          UnitNode returnType,
-                          ASTNode body) {
-
-        super(name, unit);
-        this.params = params;
-        this.returnType = returnType;
-        this.body = body;
+    public FunctionSymbol(String name, List<VariableSymbol> parameters, Dimension dimension) {
+        super(name);
+        this.parameters = parameters;
+        this.dimension = dimension;
     }
 
-    public List<ParamNode> getParams() {
-        return params;
+    public List<VariableSymbol> getParameters() {
+        return parameters;
     }
 
-    public UnitNode getReturnType() {
-        return returnType;
-    }
-
-    public ASTNode getBody() {
-        return body;
+    public Dimension getDimension() {
+        return dimension;
     }
 }

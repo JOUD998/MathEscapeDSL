@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/DSL-IR-Project.iml" filepath="$PROJECT_DIR$/DSL-IR-Project.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Math-DSL.iml" filepath="$PROJECT_DIR$/.idea/Math-DSL.iml" />
     </modules>
   </component>
 </project>

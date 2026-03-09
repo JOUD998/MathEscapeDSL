@@ -1,42 +1,55 @@
 package com.company.ui;
+
 import com.company.core.ast.ASTBuilder;
 import com.company.core.model.ASTNode;
-import com.company.core.model.NumberLiteralNode;
-import com.company.core.model.unit.BaseUnitNode;
-import com.company.core.model.unit.UnitNode;
 import com.company.core.semantic.SemanticAnalyzer;
-import com.company.core.symbol_table.SymbolTable;
-import com.company.core.symbol_table.VariableSymbol;
 import com.company.grammar.MathDSLLexer;
 import com.company.grammar.MathDSLParser;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
+
+import org.antlr.v4.runtime.*;
 
 public class TestParser {
+
     public static void main(String[] args) throws Exception {
 
-        String input = "let x = 3m + 4m";
+        // مثال: متغيرات عامة + دالة
+        String input = ""
+                + "let a = 3m "
+                + "let b = 5s "
+                + "fun distanceooo(v: m/s, t: s): m = v * t";
 
-        // 1️⃣ إنشاء Lexer و Parser من ANTLR
+        System.out.println("INPUT:");
+        System.out.println(input);
+        System.out.println("-------------");
+
+        // 1️⃣ Lexer
         CharStream charStream = CharStreams.fromString(input);
         MathDSLLexer lexer = new MathDSLLexer(charStream);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        MathDSLParser parser = new MathDSLParser(tokens);
 
-        // 2️⃣ عمل Parse للشجرة
+        // 2️⃣ Tokens
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+
+        // 3️⃣ Parser
+        MathDSLParser parser = new MathDSLParser(tokens);
         MathDSLParser.ProgContext tree = parser.prog();
 
-        // 3️⃣ بناء AST باستخدام ASTBuilder
+        System.out.println("Parsing done.");
+        System.out.println("-------------");
+
+        // 4️⃣ AST
         ASTBuilder astBuilder = new ASTBuilder();
         ASTNode ast = astBuilder.visitProg(tree);
 
+        System.out.println("AST built.");
+        System.out.println("-------------");
 
-        // 4️⃣ تطبيق SemanticAnalyzer
+        // 5️⃣ Semantic Analysis
         SemanticAnalyzer analyzer = new SemanticAnalyzer();
-        ast.accept(analyzer); // هنا رح يزور AST كله
-        System.out.println("Semantic analysis done!");
-        System.out.println("declared variables: " );
-    }
+        ast.accept(analyzer);
 
+        System.out.println("-------------");
+        System.out.println("Symbol table after analysis:");
+
+
+    }
 }

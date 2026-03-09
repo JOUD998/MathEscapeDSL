@@ -5,25 +5,19 @@ import java.util.Map;
 
 public class SymbolTable {
 
-    private final Map<String, Symbol> symbols;
-    private final SymbolTable parent;
+    private Map<String, Symbol> symbols = new HashMap<>();
+    private SymbolTable parent;
 
-    // Constructor للـ global scope
-    public SymbolTable() {
-        this(null);
-    }
-
-    // Constructor لأي child scope
     public SymbolTable(SymbolTable parent) {
-        this.symbols = new HashMap<>();
         this.parent = parent;
     }
 
-    public SymbolTable getParent() {
-        return parent;
+    public void define(Symbol symbol) {
+        symbols.put(symbol.getName(), symbol);
     }
 
-    public Symbol lookup(String name) {
+    public Symbol resolve(String name) {
+
         Symbol symbol = symbols.get(name);
 
         if (symbol != null) {
@@ -31,19 +25,48 @@ public class SymbolTable {
         }
 
         if (parent != null) {
-            return parent.lookup(name);
+            return parent.resolve(name);
         }
 
-        return null; // not defined
+        return null;
     }
 
-    public void define(Symbol symbol) {
-        if (symbols.containsKey(symbol.getName())) {
-            throw new RuntimeException(
-                    "Symbol '" + symbol.getName() + "' already defined in this scope"
-            );
+    public SymbolTable getParent() {
+        return parent;
+    }
+
+    public Map<String, Symbol> getSymbols() {
+        return symbols;
+    }
+    public boolean existsInCurrentScope(String name) {
+        return symbols.containsKey(name);
+    }
+    public void printTree() {
+        printTree("", true);
+    }
+
+    private void printTree(String prefix, boolean isRoot) {
+        if (isRoot) {
+            System.out.println("SymbolTable (root/global scope):");
+        } else {
+            System.out.println(prefix + "└─ Scope:");
         }
 
-        symbols.put(symbol.getName(), symbol);
-    }
-}
+        String childPrefix = isRoot ? "" : prefix + "    ";
+
+        for (Map.Entry<String, Symbol> entry : symbols.entrySet()) {
+            Symbol sym = entry.getValue();
+            if (sym instanceof VariableSymbol) {
+                VariableSymbol vs = (VariableSymbol) sym;
+
+                System.out.println(childPrefix + "├─ " + vs.getName() + " : " + vs.getDimension());
+            } else {
+                System.out.println(childPrefix + "├─ " + sym.getName() + " : " + sym.getClass().getSimpleName());
+            }
+        }
+
+        if (parent != null && isRoot) {
+            System.out.println("Parent Scopes:");
+            parent.printTree(prefix, false);
+        }
+    }}
