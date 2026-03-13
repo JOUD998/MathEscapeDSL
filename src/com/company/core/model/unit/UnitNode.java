@@ -2,27 +2,23 @@ package com.company.core.model.unit;
 
 import com.company.core.model.ASTNode;
 import com.company.core.semantic.ASTVisitor;
-import com.company.core.semantic.unit.Dimension;
 
 public class UnitNode extends ASTNode {
 
     public BaseUnitNode left;
     public BaseUnitNode right;
 
-    public Dimension dimension;
     public double toBaseFactor;
 
     public UnitNode(BaseUnitNode left){
         this.left = left;
         this.right = null;
-        this.dimension = Dimension.NONE;
         this.toBaseFactor = 1.0;
     }
 
     public UnitNode(BaseUnitNode left, BaseUnitNode right){
         this.left = left;
         this.right = right;
-        this.dimension = Dimension.NONE;
         this.toBaseFactor = 1.0;
     }
 

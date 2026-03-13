@@ -9,11 +9,13 @@ public class UnitInfo {
         this.toBaseFactor = toBaseFactor;
     }
 
-    public Dimension getUnitCategory() {
+    public Dimension getDimension() {
         return dimension;
     }
-
     public double getToBaseFactor() {
         return toBaseFactor;
     }
+
+
+
 }

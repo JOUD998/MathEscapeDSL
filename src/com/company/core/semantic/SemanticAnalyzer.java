@@ -6,7 +6,6 @@ import com.company.core.model.statment.StatementNode;
 import com.company.core.model.unit.BaseUnitNode;
 import com.company.core.model.unit.UnitNode;
 import com.company.core.semantic.unit.Dimension;
-import com.company.core.semantic.unit.UnitInfo;
 import com.company.core.semantic.unit.UnitRegistry;
 import com.company.core.symbol_table.FunctionSymbol;
 import com.company.core.symbol_table.Symbol;
@@ -14,7 +13,6 @@ import com.company.core.symbol_table.SymbolTable;
 import com.company.core.symbol_table.VariableSymbol;
 
 import java.util.List;
-import java.util.Map;
 
 public class SemanticAnalyzer implements ASTVisitor<Void> {
 
@@ -88,11 +86,11 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
             return null;
         }
 
-        Dimension dimension = (node.unit != null) ? node.unit.dimension : Dimension.NONE;
+        Dimension dimensionEnum = (node.unit != null) ? node.unit.dimension : new Dimension();
 
         VariableSymbol symbol = new VariableSymbol(
                 node.varId.name,
-                dimension,
+                dimensionEnum,
                 node.expression
         );
 
@@ -139,16 +137,16 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
     @Override
     public Void visitIdNode(IdNode node) {
 
-        VariableSymbol symbol = (VariableSymbol) currentScope.resolve(node.name);
+        Symbol symbol = currentScope.resolve(node.name);
 
-        if (symbol == null) {
+        if (!(symbol instanceof VariableSymbol)) {
             System.out.println("Semantic Error: variable not declared: " + node.name);
-            node.dimension = Dimension.NONE;
-            node.toBaseFactor = 1.0;
+            node.dimension = new Dimension();
             return null;
         }
 
-        node.dimension = symbol.getDimension();
+        VariableSymbol var = (VariableSymbol) symbol;
+        node.dimension = var.getDimension();
         return null;
     }
 
@@ -163,14 +161,14 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
         // التأكد أن الاسم موجود
         if (symbol == null) {
             System.out.println("Semantic Error: function not declared: " + node.funcId.name);
-            node.dimension = Dimension.NONE;
+            node.dimension = new Dimension();
             return null;
         }
 
         // التأكد أنه Function
         if (!(symbol instanceof FunctionSymbol)) {
             System.out.println("Semantic Error: '" + node.funcId.name + "' is not a function");
-            node.dimension = Dimension.NONE;
+            node.dimension = new Dimension();
             return null;
         }
 
@@ -198,20 +196,20 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
 
                 ParamNode param = params.get(i);
 
-                System.out.println("Arg " + (i+1) + " -> " + arg.dimension +
+                System.out.println("Arg " + (i + 1) + " -> " + arg.dimension +
                         " | Param -> " + param.dimension);
 
-                if (arg.dimension != param.dimension) {
-                    System.out.println("Semantic Error: Argument " + (i+1) + " in function '"
+                if (!arg.dimension.equals(param.dimension)) {
+                    System.out.println("Semantic Error: Argument " + (i + 1) + " in function '"
                             + node.funcId.name +
-                            "' has dimension mismatch. Expected: "
+                            "' has dimensionEnum mismatch. Expected: "
                             + param.dimension +
                             ", but got: " + arg.dimension + ".");
                 }
             }
         }
 
-        // 5️⃣ تحديد dimension الناتجة من الدالة
+        // 5️⃣ تحديد dimensionEnum الناتجة من الدالة
         node.dimension = funcSymbol.getDimension();
 
         return null;
@@ -235,24 +233,20 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
         Dimension rightDim = node.right.dimension;
 
         if (node.op == '+' || node.op == '-') {
-            if (leftDim == rightDim) {
+            if (leftDim.equals(rightDim)) {
                 node.dimension = leftDim;
                 System.out.println("Dimension match: " + leftDim + " " + node.op + " " + rightDim);
             } else {
-                node.dimension = Dimension.NONE;
-                System.out.println("Semantic Error: Dimension mismatch: " + leftDim + " " + node.op + " " + rightDim);
+                node.dimension = new Dimension();
+                System.out.println("Semantic Error: DimensionEnum mismatch: " + leftDim + " " + node.op + " " + rightDim);
             }
+
+            //todo: handle unit conversion
         } else if (node.op == '*') {
-            node.dimension = Dimension.NONE;
         } else if (node.op == '/') {
-            if (leftDim == Dimension.LENGTH && rightDim == Dimension.TIME) {
-                node.dimension = Dimension.SPEED;
-            } else {
-                node.dimension = Dimension.NONE;
-            }
         }
 
-        System.out.println("BinaryOpNode Dimension: " + node.dimension);
+        System.out.println("BinaryOpNode DimensionEnum: " + node.dimension);
         return null;
     }
 
@@ -278,7 +272,7 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
             node.dimension = node.unitNode.dimension;
             node.toBaseFactor = node.unitNode.toBaseFactor;
         } else {
-            node.dimension = Dimension.NONE;
+            node.dimension = new Dimension();
             node.toBaseFactor = 1.0;
         }
         return null;
@@ -294,42 +288,49 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
     // -------------------------
     @Override
     public Void visitUnitNode(UnitNode node) {
+
         node.left.accept(this);
+
         if (node.isDivision()) {
             node.right.accept(this);
+            String s = node.left.dimension.toString() + " / " + node.right.dimension.toString();
+            System.out.println("UnitNode: " + s);
         }
 
         if (!node.isDivision()) {
             node.dimension = node.left.dimension;
             node.toBaseFactor = node.left.toBaseFactor;
         } else {
-            if (node.left.dimension == Dimension.LENGTH && node.right.dimension == Dimension.TIME) {
-                node.dimension = Dimension.SPEED;
+            node.dimension = node.left.dimension.divide(node.right.dimension);
+
+            System.out.println("UnitNode DimensionEnum: " + node.dimension.toString());
+            System.out.println(node.dimension.length + " " + node.dimension.time + " " + node.dimension.mass);
+            if (UnitRegistry.containsDimension(node.dimension)) {
                 node.toBaseFactor = node.left.toBaseFactor / node.right.toBaseFactor;
             } else {
-                node.dimension = Dimension.NONE;
                 node.toBaseFactor = 1.0;
-                System.out.println("Invalid unit division: " + node.left.symbol + " / " + node.right.symbol);
+                node.dimension = new Dimension();
+                System.out.println("Unbekannte zusammengesetzte Einheit: " + node.dimension.toReadableString());
             }
+
         }
 
-//        System.out.println("Visiting UnitNode: " + node.left.symbol +
-//                (node.isDivision() ? " / " + node.right.symbol : "") +
-//                " -> Dimension: " + node.dimension + ", Factor: " + node.toBaseFactor);
+
         return null;
     }
 
     @Override
     public Void visitBaseUnitNode(BaseUnitNode node) {
         if (UnitRegistry.UNIT_TABLE.containsKey(node.symbol)) {
-            UnitInfo unitInfo = UnitRegistry.UNIT_TABLE.get(node.symbol);
-            node.dimension = unitInfo.getUnitCategory();
-            node.toBaseFactor = unitInfo.getToBaseFactor();
+
+            node.dimension = UnitRegistry.UNIT_TABLE.get(node.symbol).getDimension();
+            node.toBaseFactor = UnitRegistry.UNIT_TABLE.get(node.symbol).getToBaseFactor();
         } else {
-            node.dimension = Dimension.NONE;
+            node.dimension = new Dimension();
             node.toBaseFactor = 1.0;
             System.out.println("Unbekannte Einheit: " + node.symbol);
         }
+
         return null;
     }
 
@@ -339,9 +340,9 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
         node.thenBranch.accept(this);
         node.elseBranch.accept(this);
 
-        if (node.thenBranch.dimension != node.elseBranch.dimension) {
+        if (!node.thenBranch.dimension.equals(node.elseBranch.dimension)) {
             System.out.println("Semantic Error: if branches must have same dimension");
-            node.dimension = Dimension.NONE;
+            node.dimension = new Dimension();
         } else {
             node.dimension = node.thenBranch.dimension;
         }

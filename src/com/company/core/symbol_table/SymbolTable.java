@@ -60,7 +60,7 @@ public class SymbolTable {
             Symbol sym = entry.getValue();
             if (sym instanceof VariableSymbol) {
                 VariableSymbol vs = (VariableSymbol) sym;
-                System.out.println(childPrefix + "├─ " + vs.getName() + " : " + vs.getDimension());
+                System.out.println(childPrefix + "├─ " + vs.getName() + " : " + vs.getDimension().toString());
             } else if (sym instanceof FunctionSymbol) {
                 FunctionSymbol fs = (FunctionSymbol) sym;
                 System.out.println(childPrefix + "├─ " + fs.getName() + " : Function");
