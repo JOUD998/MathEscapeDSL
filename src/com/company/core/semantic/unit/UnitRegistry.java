@@ -34,6 +34,13 @@ public class UnitRegistry {
 
         return false;
     }
+    public static String getBaseUnitSymbol(Dimension dim) {
+        if (dim.length == 1 && dim.time == 0 && dim.mass == 0) return "m";
+        if (dim.length == 0 && dim.time == 1 && dim.mass == 0) return "s";
+        if (dim.length == 0 && dim.time == 0 && dim.mass == 1) return "g";
+        if (dim.length == 1 && dim.time == -1 && dim.mass == 0) return "m/s";
+        return "NONE";
+    }
 
 
 }

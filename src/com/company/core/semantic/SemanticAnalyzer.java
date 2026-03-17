@@ -40,6 +40,64 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
         SymbolTable previous = currentScope;
 
         if (previous.existsInCurrentScope(node.funcId.name)) {
+            throw new RuntimeException("Semantic Error: function already declared: " + node.funcId.name);
+        }
+
+        // 1. استخراج الأبعاد من الـ returnType أولاً
+        Dimension declaredReturnDim = new Dimension(); // الافتراضي NONE
+        if (node.returnType != null) {
+            node.returnType.accept(this);
+            declaredReturnDim = node.returnType.dimension;
+        }
+
+        // 2. تعريف الدالة مؤقتاً في الجدول (عشان الـ Recursion)
+        FunctionSymbol funcSymbol = new FunctionSymbol(node.funcId.name, node.params, declaredReturnDim);
+        previous.define(funcSymbol);
+
+        try {
+            // 3. إنشاء السكوب الخاص بالدالة ومعالجة البارامترات
+            SymbolTable functionScope = new SymbolTable(previous);
+            funcSymbol.setScope(functionScope);
+            currentScope = functionScope;
+
+            if (node.params != null) {
+                for (ParamNode param : node.params) {
+                    param.accept(this);
+                }
+            }
+
+            // 4. فحص جسم الدالة ومقارنة الوحدات
+            if (node.body != null) {
+                node.body.accept(this);
+                Dimension bodyDim = node.body.dimension;
+
+                if (!declaredReturnDim.isNone()) {
+                    if (!bodyDim.equals(declaredReturnDim)) {
+                        // هون "المصيدة": إذا الوحدات ما تطابقت، منرمي خطأ
+                        throw new RuntimeException("Return type mismatch: Expected " +
+                                declaredReturnDim.toReadableString() + " but body is " + bodyDim.toReadableString());
+                    }
+                }
+            }
+        } catch (RuntimeException e) {
+            // 5. الـ Rollback: حذف الدالة من جدول الرموز إذا صار أي خطأ سيمانتيك
+            previous.remove(node.funcId.name);
+            // إعادة رمي الخطأ عشان الـ REPL يعرف إن العملية فشلت وما يكمل للـ Interpreter
+            throw e;
+        } finally {
+            // العودة دائماً للسكوب الأب مهما صار
+            currentScope = previous;
+        }
+
+        return null;
+    }
+
+
+    /*@Override
+    public Void visitFunDeclNode(FunDeclNode node) {
+        SymbolTable previous = currentScope;
+
+        if (previous.existsInCurrentScope(node.funcId.name)) {
             System.out.println("Semantic Error: function already declared: " + node.funcId.name);
             return null;
         }
@@ -70,32 +128,43 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
         currentScope = previous;
 
         return null;
-    }
+    }*/
 
     @Override
     public Void visitVariableNode(VariableNode node) {
-
-        if (node.unit != null) {
-            node.unit.accept(this);
-        }
-
+        // 1. تحليل التعبير أولاً (عشان نعرف أبعاده إذا كانت 10m مثلاً)
         node.expression.accept(this);
+        Dimension exprDim = node.expression.dimension;
 
         if (currentScope.existsInCurrentScope(node.varId.name)) {
-            System.out.println("Semantic Error: variable already declared: " + node.varId.name);
-            return null;
+            throw new RuntimeException("Semantic Error: variable already declared: " + node.varId.name);
         }
 
-        Dimension dimensionEnum = (node.unit != null) ? node.unit.dimension : new Dimension();
+        Dimension finalDimension;
 
+        if (node.unit != null) {
+            node.unit.accept(this); // تحليل الوحدة الصريحة مثل :m
+            Dimension explicitDim = node.unit.dimension;
+
+            // حالة let x:s = 1m (خطأ تضارب)
+            if (!exprDim.isNone() && !exprDim.equals(explicitDim)) {
+                throw new RuntimeException("Semantic Error: Dimension mismatch! Expected " + explicitDim + " but got " + exprDim);
+            }
+
+            finalDimension = explicitDim; // نعتمد الوحدة الصريحة (حالة let x:m = 1)
+        } else {
+            // حالة let x = 1m (استنتاج النوع)
+            finalDimension = exprDim;
+        }
+
+        // 4. تخزين الرمز بالبُعد الصحيح (مو NONE!)
         VariableSymbol symbol = new VariableSymbol(
                 node.varId.name,
-                dimensionEnum,
+                finalDimension,
                 node.expression
         );
 
         currentScope.define(symbol);
-
         return null;
     }
 
@@ -140,9 +209,8 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
         Symbol symbol = currentScope.resolve(node.name);
 
         if (!(symbol instanceof VariableSymbol)) {
-            System.out.println("Semantic Error: variable not declared: " + node.name);
             node.dimension = new Dimension();
-            return null;
+            throw new RuntimeException("Semantic Error: variable not declared: " + node.name);
         }
 
         VariableSymbol var = (VariableSymbol) symbol;
@@ -153,23 +221,21 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
     @Override
     public Void visitFuncCallNode(FuncCallNode node) {
 
-        System.out.println("Function Calling: " + node.funcId.name);
 
         // 1️⃣ resolve symbol
         Symbol symbol = currentScope.resolve(node.funcId.name);
 
         // التأكد أن الاسم موجود
         if (symbol == null) {
-            System.out.println("Semantic Error: function not declared: " + node.funcId.name);
             node.dimension = new Dimension();
-            return null;
+            throw new RuntimeException("Semantic Error: function not declared: " + node.funcId.name);
+
         }
 
         // التأكد أنه Function
         if (!(symbol instanceof FunctionSymbol)) {
-            System.out.println("Semantic Error: '" + node.funcId.name + "' is not a function");
             node.dimension = new Dimension();
-            return null;
+            throw new RuntimeException("Semantic Error: '" + node.funcId.name + "' is not a function");
         }
 
         FunctionSymbol funcSymbol = (FunctionSymbol) symbol;
@@ -180,7 +246,7 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
 
         // 3️⃣ التحقق من عدد arguments
         if (params != null && args.size() != params.size()) {
-            System.out.println("Semantic Error: wrong number of arguments in call to "
+            throw new RuntimeException("Semantic Error: wrong number of arguments in call to "
                     + node.funcId.name +
                     ". Expected " + params.size() +
                     " but got " + args.size());
@@ -196,11 +262,9 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
 
                 ParamNode param = params.get(i);
 
-                System.out.println("Arg " + (i + 1) + " -> " + arg.dimension +
-                        " | Param -> " + param.dimension);
 
                 if (!arg.dimension.equals(param.dimension)) {
-                    System.out.println("Semantic Error: Argument " + (i + 1) + " in function '"
+                    throw new RuntimeException("Semantic Error: Argument " + (i + 1) + " in function '"
                             + node.funcId.name +
                             "' has dimensionEnum mismatch. Expected: "
                             + param.dimension +
@@ -233,20 +297,16 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
         Dimension rightDim = node.right.dimension;
 
         if (node.op == '+' || node.op == '-') {
-            if (leftDim.equals(rightDim)) {
-                node.dimension = leftDim;
-                System.out.println("Dimension match: " + leftDim + " " + node.op + " " + rightDim);
-            } else {
-                node.dimension = new Dimension();
-                System.out.println("Semantic Error: DimensionEnum mismatch: " + leftDim + " " + node.op + " " + rightDim);
+            if (!leftDim.equals(rightDim)) {
+                throw new RuntimeException("Semantic Error: Cannot " + "(" + node.op + ")" + " " + leftDim + " and " + rightDim);
             }
-
-            //todo: handle unit conversion
+            node.dimension = leftDim;
+            node.toBaseFactor = node.left.toBaseFactor;
         } else if (node.op == '*') {
+            node.dimension = leftDim.multiply(rightDim);
         } else if (node.op == '/') {
+            node.dimension = leftDim.divide(rightDim);
         }
-
-        System.out.println("BinaryOpNode DimensionEnum: " + node.dimension);
         return null;
     }
 
@@ -262,6 +322,24 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
 
     @Override
     public Void visitPowerNode(PowerNode node) {
+        node.base.accept(this);
+
+        // 2. التحقق من أن الأس هو رقم مباشر (Literal) حصراً
+        if (!(node.exponent instanceof NumberLiteralNode)) {
+            throw new RuntimeException("Semantic Error: Exponent must be a literal integer (e.g., 2, 3). Expressions or variables are not allowed as exponents.");
+        }
+
+        NumberLiteralNode exp = (NumberLiteralNode) node.exponent;
+
+        // 3. التأكد أنه عدد صحيح (Ganzzahlig)
+        if (exp.value != Math.floor(exp.value)) {
+            throw new RuntimeException("Semantic Error: Exponent must be an integer, not " + exp.value);
+        }
+
+        // 4. وسم العقدة بالأبعاد الجديدة
+        // (استخدام ميثود scale التي تضرب أبعاد الأساس في قيمة الأس)
+        node.dimension = node.base.dimension.scale(exp.value);
+
         return null;
     }
 
@@ -272,6 +350,7 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
             node.dimension = node.unitNode.dimension;
             node.toBaseFactor = node.unitNode.toBaseFactor;
         } else {
+
             node.dimension = new Dimension();
             node.toBaseFactor = 1.0;
         }
@@ -288,13 +367,11 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
     // -------------------------
     @Override
     public Void visitUnitNode(UnitNode node) {
-
         node.left.accept(this);
 
         if (node.isDivision()) {
             node.right.accept(this);
             String s = node.left.dimension.toString() + " / " + node.right.dimension.toString();
-            System.out.println("UnitNode: " + s);
         }
 
         if (!node.isDivision()) {
@@ -303,14 +380,12 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
         } else {
             node.dimension = node.left.dimension.divide(node.right.dimension);
 
-            System.out.println("UnitNode DimensionEnum: " + node.dimension.toString());
-            System.out.println(node.dimension.length + " " + node.dimension.time + " " + node.dimension.mass);
             if (UnitRegistry.containsDimension(node.dimension)) {
                 node.toBaseFactor = node.left.toBaseFactor / node.right.toBaseFactor;
             } else {
                 node.toBaseFactor = 1.0;
                 node.dimension = new Dimension();
-                System.out.println("Unbekannte zusammengesetzte Einheit: " + node.dimension.toReadableString());
+                throw new RuntimeException("Unbekannte zusammengesetzte Einheit: " + node.dimension.toReadableString());
             }
 
         }
@@ -328,7 +403,7 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
         } else {
             node.dimension = new Dimension();
             node.toBaseFactor = 1.0;
-            System.out.println("Unbekannte Einheit: " + node.symbol);
+            throw new RuntimeException("Unbekannte Einheit: " + node.symbol);
         }
 
         return null;
@@ -341,8 +416,8 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
         node.elseBranch.accept(this);
 
         if (!node.thenBranch.dimension.equals(node.elseBranch.dimension)) {
-            System.out.println("Semantic Error: if branches must have same dimension");
             node.dimension = new Dimension();
+            throw new RuntimeException("Semantic Error: if branches must have same dimension");
         } else {
             node.dimension = node.thenBranch.dimension;
         }

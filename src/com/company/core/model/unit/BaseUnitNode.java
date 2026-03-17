@@ -14,6 +14,14 @@ public class BaseUnitNode extends ASTNode {
     }
 
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        BaseUnitNode other = (BaseUnitNode) obj;
+        return this.symbol != null && this.symbol.equals(other.symbol);
+    }
+
 
     @Override
     public String toJson() {

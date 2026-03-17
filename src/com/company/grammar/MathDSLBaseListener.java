@@ -125,18 +125,6 @@ public class MathDSLBaseListener implements MathDSLListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterBaseUnit(MathDSLParser.BaseUnitContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitBaseUnit(MathDSLParser.BaseUnitContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterExpr(MathDSLParser.ExprContext ctx) { }
 	/**
 	 * {@inheritDoc}

@@ -7,6 +7,7 @@ public class VariableSymbol extends Symbol {
 
     private Dimension dimension;
     private ASTNode expression;
+    private double value;
 
     public VariableSymbol(String name, Dimension dimension, ASTNode expression) {
         super(name);
@@ -16,5 +17,17 @@ public class VariableSymbol extends Symbol {
 
     public Dimension getDimension() {
         return dimension;
+    }
+
+    public ASTNode getExpression() {
+        return expression;
+    }
+
+    public void setValue(double value) {
+        this.value = value;
+    }
+
+    public double getValue() {
+        return value;
     }
 }

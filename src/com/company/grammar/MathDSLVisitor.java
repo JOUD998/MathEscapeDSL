@@ -65,12 +65,6 @@ public interface MathDSLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitUnit(MathDSLParser.UnitContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MathDSLParser#baseUnit}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitBaseUnit(MathDSLParser.BaseUnitContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link MathDSLParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

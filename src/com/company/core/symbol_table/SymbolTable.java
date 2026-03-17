@@ -44,6 +44,10 @@ public class SymbolTable {
         return symbols.containsKey(name);
     }
 
+    public void remove(String name) {
+        symbols.remove(name);
+    }
+
     public void printTree() {
         printTree("", true);
     }
@@ -74,6 +78,7 @@ public class SymbolTable {
             }
         }
     }
+
 
 
 }

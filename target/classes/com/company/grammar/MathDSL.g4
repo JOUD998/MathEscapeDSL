@@ -42,12 +42,10 @@ argList
 
 // --- Units ---
 unit
-    : baseUnit
-    | baseUnit DIV baseUnit
+    : ID (DIV ID)?
     ;
 
-baseUnit
-    : ID;
+
 
 // --- Expressions (precedence) ---
 expr

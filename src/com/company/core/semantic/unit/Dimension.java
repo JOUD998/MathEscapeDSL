@@ -1,6 +1,5 @@
 package com.company.core.semantic.unit;
 
-import static com.company.core.semantic.unit.UnitRegistry.UNIT_TABLE;
 
 public class Dimension {
     public int length;
@@ -61,6 +60,17 @@ public class Dimension {
         return sb.toString();
     }
 
+    public boolean isNone() {
+        return length == 0 && time == 0 && mass == 0;
+    }
+
+    public Dimension scale(double factor) {
+        return new Dimension(
+                (int)(this.length * factor),
+                (int)(this.time * factor),
+                (int)(this.mass * factor)
+        );
+    }
     @Override
     public String toString() {
         return toReadableString();

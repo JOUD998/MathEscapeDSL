@@ -98,16 +98,6 @@ public interface MathDSLListener extends ParseTreeListener {
 	 */
 	void exitUnit(MathDSLParser.UnitContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link MathDSLParser#baseUnit}.
-	 * @param ctx the parse tree
-	 */
-	void enterBaseUnit(MathDSLParser.BaseUnitContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link MathDSLParser#baseUnit}.
-	 * @param ctx the parse tree
-	 */
-	void exitBaseUnit(MathDSLParser.BaseUnitContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link MathDSLParser#expr}.
 	 * @param ctx the parse tree
 	 */

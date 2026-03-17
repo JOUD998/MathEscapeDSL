@@ -106,19 +106,19 @@ public class ASTBuilder extends MathDSLBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitUnit(MathDSLParser.UnitContext ctx) {
-        if (ctx.baseUnit().size() == 1) {
-            BaseUnitNode left = (BaseUnitNode) visit(ctx.baseUnit(0));
-            return new UnitNode(left);
+
+        BaseUnitNode left = new BaseUnitNode(ctx.ID(0).getText());
+
+        if (ctx.DIV() != null) {
+            BaseUnitNode right = new BaseUnitNode(ctx.ID(1).getText());
+            return new UnitNode(left, right);
         }
-        BaseUnitNode left = (BaseUnitNode) visit(ctx.baseUnit(0));
-        BaseUnitNode right = (BaseUnitNode) visit(ctx.baseUnit(1));
-        return new UnitNode(left, right);
+
+         return new UnitNode(left);
+
     }
 
-    @Override
-    public ASTNode visitBaseUnit(MathDSLParser.BaseUnitContext ctx) {
-        return new BaseUnitNode(ctx.getText());
-    }
+
 
     @Override
     public ASTNode visitExpr(MathDSLParser.ExprContext ctx) {
@@ -157,9 +157,25 @@ public class ASTBuilder extends MathDSLBaseVisitor<ASTNode> {
     }
 
 
+
     @Override
     public ASTNode visitPrimary(MathDSLParser.PrimaryContext ctx) {
+        // 1. حالة المعرفات (متغير أو دالة) - انقلها للأول!
+        if (ctx.ID() != null) {
+            if (ctx.LPAREN() != null) { // استدعاء دالة: ID(args)
+                List<ASTNode> args = new ArrayList<>();
+                if (ctx.argList() != null) {
+                    for (MathDSLParser.ExprContext exprCtx : ctx.argList().expr()) {
+                        args.add(visit(exprCtx));
+                    }
+                }
+                return new FuncCallNode(new IdNode(ctx.ID().getText()), args);
+            } else { // متغير عادي: ID
+                return new IdNode(ctx.ID().getText());
+            }
+        }
 
+        // 2. حالة الرقم
         if (ctx.NUMBER() != null) {
             double value = Double.parseDouble(ctx.NUMBER().getText());
             UnitNode unit = null;
@@ -168,32 +184,24 @@ public class ASTBuilder extends MathDSLBaseVisitor<ASTNode> {
             }
             return new NumberLiteralNode(value, unit);
         }
-        else if (ctx.ID() != null) {
-            if (ctx.LPAREN() != null && ctx.RPAREN() != null) {
-                List<ASTNode> args = new ArrayList<>();
-                if (ctx.argList() != null) {
-                    for (MathDSLParser.ExprContext exprCtx : ctx.argList().expr()) {
-                        args.add(visit(exprCtx));
-                    }
-                }
-                return new FuncCallNode(
-                        new IdNode(ctx.ID().getText()),
-                        args
-                );
-            } else {
-                return new IdNode(ctx.ID().getText());
-            }
-        } else if (ctx.IF() != null) {
+
+        // 3. حالة الأقواس (تأكد أنها أقواس تعبير وليست أقواس دالة)
+        // بما أننا فحصنا الـ ID فوق، أي LPAREN بتوصل لهون هي أكيد (expr)
+        if (ctx.LPAREN() != null) {
+            return visit(ctx.expr(0));
+        }
+
+        // 4. حالة الـ If-Then-Else
+        if (ctx.IF() != null) {
             return new IfNode(
-                    (ASTNode) visit(ctx.expr(0)),
-                    (ASTNode) visit(ctx.expr(1)),
-                    (ASTNode) visit(ctx.expr(2))
+                    visit(ctx.expr(0)),
+                    visit(ctx.expr(1)),
+                    visit(ctx.expr(2))
             );
         }
 
-        return super.visitPrimary(ctx);
+        return null;
     }
-
 
 }
 

@@ -27,6 +27,24 @@ public class UnitNode extends ASTNode {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        UnitNode other = (UnitNode) obj;
+
+        // مقارنة الجزء الأيسر
+        boolean leftEquals = (this.left == null && other.left == null) ||
+                (this.left != null && this.left.equals(other.left));
+
+        // مقارنة الجزء الأيمن
+        boolean rightEquals = (this.right == null && other.right == null) ||
+                (this.right != null && this.right.equals(other.right));
+
+        return leftEquals && rightEquals;
+    }
+
+
+    @Override
     public String toJson() {
         if (right == null) {
             return "{\n" +
