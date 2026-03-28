@@ -1,5 +1,4 @@
 package com.company.core.semantic;
-
 import com.company.core.ast.*;
 import com.company.core.ast.function.*;
 import com.company.core.ast.statment.StatementNode;
@@ -10,6 +9,8 @@ import com.company.core.unit.UnitRegistry;
 import com.company.core.symbol_table.Symbol;
 import com.company.core.symbol_table.SymbolTable;
 import com.company.core.symbol_table.VariableSymbol;
+import com.company.ui.Color;
+import java.awt.*;
 
 public class TermRewriter implements ASTVisitor<ASTNode> {
 
@@ -18,9 +19,6 @@ public class TermRewriter implements ASTVisitor<ASTNode> {
     public TermRewriter(SymbolTable scope) {
         this.currentScope = scope;
     }
-
-
-
 
 
     //TODO node.accept(this) statements delete some and add some to rewrite the term
@@ -79,43 +77,38 @@ public class TermRewriter implements ASTVisitor<ASTNode> {
 
             // (Algebraic Rules)
             if (node.left instanceof NumberLiteralNode l) {
-                if (l.value == 1) return node.right;
-                if (l.value == 0) return new NumberLiteralNode(0, null);
+                if (l.value == 1) return node.right; // 1 * x = x
+                if (l.value == 0) return createZeroNode(); // 0 * x = 0
             }
             if (node.right instanceof NumberLiteralNode r) {
-                if (r.value == 1) return node.left;
-                if (r.value == 0) return new NumberLiteralNode(0, null);
+                if (r.value == 1) return node.left; // x * 1 = x
+                if (r.value == 0) return createZeroNode(); // x * 0 = 0
             }
 
             //  (Constant Folding)
             if (node.left instanceof NumberLiteralNode l && node.right instanceof NumberLiteralNode r) {
                 Dimension newDim = l.dimension.multiply(r.dimension);
-                NumberLiteralNode result = new NumberLiteralNode((l.value * r.value), new UnitNode(new BaseUnitNode("Correct Unit in Dimension: " + newDim.toReadableString())));
-                result.dimension = newDim;
-                return result;
+                return createResultNode(l.value * r.value, newDim);
             }
 
 
-        }
-
-        else if (node.op == '/') {
+        } else if (node.op == '/') {
             // (Algebraic Rules)
             if (node.right instanceof NumberLiteralNode r) {
                 if (r.value == 1) return node.left; // x / 1 = x
                 if (r.value == 0) throw new ArithmeticException("Division by zero"); // x / 0 = error
             }
             if (node.left instanceof NumberLiteralNode l) {
-                if (l.value == 0) return new NumberLiteralNode(0, null); // 0 / x = 0 (for x != 0)
+                if (l.value == 0) return createZeroNode(); // 0 / x = 0 (for x != 0)
             }
             //  (Constant Folding)
             if (node.left instanceof NumberLiteralNode l && node.right instanceof NumberLiteralNode r) {
                 Dimension newDim = l.dimension.divide(r.dimension);
-                NumberLiteralNode result = new NumberLiteralNode((l.value / r.value), new UnitNode(new BaseUnitNode("Correct Unit in Dimension: " + newDim.toReadableString())));
-                result.dimension = newDim;
-                return result;
+                return createResultNode(l.value / r.value, newDim);
             }
 
         }
+
 
         else if (node.op == '+') {
             // (Algebraic Rules)
@@ -127,34 +120,21 @@ public class TermRewriter implements ASTVisitor<ASTNode> {
             }
             //  (Constant Folding)
             if (node.left instanceof NumberLiteralNode l && node.right instanceof NumberLiteralNode r) {
-                NumberLiteralNode result = new NumberLiteralNode((l.value + r.value), l.unitNode);
-                result.dimension = l.dimension.copy();
-                return result;            }
+                return createResultNode(l.value + r.value, l.dimension);
+            }
 
         }
 
+
+
         else if (node.op == '-') {
             // (Algebraic Rules)
-            if (node.right instanceof NumberLiteralNode r) {
-                if (r.value == 0) return node.left; // x - 0 = x
-            }
-            if (node.left instanceof NumberLiteralNode l) {
-                if (l.value == 0){
-                    if (node.right instanceof NumberLiteralNode r){
-                        NumberLiteralNode result = new NumberLiteralNode((l.value - r.value), l.unitNode);
-                        result.dimension = r.dimension.copy();
-                        return result;
-                    }
-                }
-
-
+            if (node.right instanceof NumberLiteralNode r && r.value ==0) {
+                return node.left; // x - 0 = x
             }
             //  (Constant Folding)
             if (node.left instanceof NumberLiteralNode l && node.right instanceof NumberLiteralNode r) {
-                NumberLiteralNode result = new NumberLiteralNode((l.value - r.value), new UnitNode(new BaseUnitNode("Correct Unit in Dimension: " + l.dimension.toReadableString())));
-                result.dimension = l.dimension.copy();
-                result.unitNode = l.unitNode;
-                return result;
+                return createResultNode(l.value - r.value, l.dimension);
             }
 
         }
@@ -196,9 +176,8 @@ public class TermRewriter implements ASTVisitor<ASTNode> {
             NumberLiteralNode result = new NumberLiteralNode(newValue, null);
             result.dimension = newDim;
 
-            // تسمية الوحدة للـ REPL (مؤقتاً)
             result.unitNode = new UnitNode(new BaseUnitNode("Unit: " + newDim.toReadableString()));
-
+            System.out.println(Color.cyan("Rewriting (Constant Folding & Dimension Scaling) : " + result.value + " " + result.dimension.toBaseUnitString()));
             return result;
         }
 
@@ -214,6 +193,8 @@ public class TermRewriter implements ASTVisitor<ASTNode> {
             double factor = node.unitNode.toBaseFactor;
             if (factor != 1.0) {
                 node.value *= factor;
+                System.out.println(Color.cyan("Rewriting: " + node.value + " " + node.unitNode.dimension.toBaseUnitString()));
+
                 node.unitNode.toBaseFactor = 1.0;
                 normalizeToStandardUnit(node);
             }
@@ -242,6 +223,12 @@ public class TermRewriter implements ASTVisitor<ASTNode> {
 
     @Override
     public ASTNode visitFunDeclNode(FunDeclNode node) {
+        if (node.body != null) {
+            ASTNode simplifiedBody = node.body.accept(this);
+            if (simplifiedBody != null) {
+                node.body = simplifiedBody;
+            }
+        }
         return node;
     }
 
@@ -325,15 +312,25 @@ public class TermRewriter implements ASTVisitor<ASTNode> {
             node.unitNode = new UnitNode(new BaseUnitNode(symbol));
         }
     }
-//    private boolean areUnitsCompatible(NumberLiteralNode l, NumberLiteralNode r) {
-//        // إذا كان الطرفان بلا وحدات، فهما متوافقان (حساب أرقام عادي)
-//        if (l.unitNode == null && r.unitNode == null) return true;
-//
-//        // إذا كان أحدهما بوحدة والآخر لا، فهذا خطأ في العمليات مثل (5m + 2)
-//        if (l.unitNode == null || r.unitNode == null) return false;
-//
-//        // إذا كلاهما بوحدات، نستخدم الـ equals التي كتبناها سابقاً (أو نقارن الأبعاد Dimension)
-//        return l.unitNode.equals(r.unitNode);
-//    }
-}
 
+    private NumberLiteralNode createZeroNode() {
+        NumberLiteralNode zero = new NumberLiteralNode(0, null);
+        zero.dimension = new Dimension(0, 0, 0); // Dimensionless
+        return zero;
+    }
+    private NumberLiteralNode createResultNode(double val, Dimension dim) {
+        // جلب الرمز المناسب للأبعاد (مثلاً m إذا كانت الأبعاد طول)
+        String symbol = UnitRegistry.getBaseUnitSymbol(dim);
+
+        UnitNode unitNode = null;
+        if (!symbol.equals("NONE")) {
+            unitNode = new UnitNode(new BaseUnitNode(symbol));
+        }
+
+        NumberLiteralNode res = new NumberLiteralNode(val, unitNode);
+        res.dimension = dim; // هاد السطر هو اللي بيخلي الـ Interpreter يشوف الوحدة
+
+        System.out.println(Color.cyan("Rewriting (Constant Folding): " + val + " " + dim.toBaseUnitString()));
+        return res;
+    }
+}

@@ -69,12 +69,8 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
             if (node.body != null) {
                 node.body.accept(this);
                 Dimension bodyDim = node.body.dimension;
-                System.out.println(node.body.toJson());
 
-                if (node.body instanceof IdNode idNode){
-                    System.out.println("This is id in body: " + idNode.name);
-                    System.out.println("my Symbol Table" ); currentScope.printTree();
-                }
+
 
                 if (!declaredReturnDim.isNone()) {
                     if (!bodyDim.equals(declaredReturnDim)) {
@@ -92,44 +88,6 @@ public class SemanticAnalyzer implements ASTVisitor<Void> {
 
         return null;
     }
-
-
-    /*@Override
-    public Void visitFunDeclNode(FunDeclNode node) {
-        SymbolTable previous = currentScope;
-
-        if (previous.existsInCurrentScope(node.funcId.name)) {
-            System.out.println("Semantic Error: function already declared: " + node.funcId.name);
-            return null;
-        }
-
-        // تعريف الدالة في الـ global scope
-        FunctionSymbol funcSymbol = new FunctionSymbol(node.funcId.name, node.params, node.dimension);
-        previous.define(funcSymbol);
-
-        // إنشاء scope خاص بالدالة
-        SymbolTable functionScope = new SymbolTable(previous);
-        funcSymbol.setScope(functionScope);
-        currentScope = functionScope;
-
-        // إضافة parameters إلى الـ scope الجديد
-        if (node.params != null) {
-            for (ParamNode param : node.params) {
-                System.out.println("Parameter: " + param.name);
-                param.accept(this); // visitParamNode
-            }
-        }
-
-        // زيارة جسم الدالة
-        if (node.body != null) {
-            node.body.accept(this);
-        }
-
-        // العودة للـ scope السابق
-        currentScope = previous;
-
-        return null;
-    }*/
 
     @Override
     public Void visitVariableNode(VariableNode node) {
